@@ -1,0 +1,19 @@
+# Credenciales
+*.password
+*.secret
+.env
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Temporales
+*.tmp
+*.bak
