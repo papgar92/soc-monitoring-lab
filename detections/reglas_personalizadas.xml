@@ -1,0 +1,92 @@
+<!--
+  reglas_personalizadas.xml
+  Reglas de detección personalizadas para el laboratorio SOC casero.
+  Ubicación en el servidor Wazuh: /var/ossec/etc/rules/reglas_personalizadas.xml
+  Tras editar: systemctl restart wazuh-manager
+-->
+
+<group name="personalizado,soc_lab,">
+
+  <!-- ══════════════════════════════════════════════════════════
+       DETECCIÓN DE FUERZA BRUTA SSH
+       Se activa cuando una IP falla el login SSH 5+ veces en 2 min
+       ══════════════════════════════════════════════════════════ -->
+  <rule id="100001" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>5760</if_matched_sid>
+    <same_source_ip />
+    <description>Ataque de fuerza bruta SSH detectado: $(srcip) superó el umbral de intentos fallidos</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>fallos_autenticacion,fuerza_bruta,</group>
+  </rule>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LOGIN EXITOSO TRAS FUERZA BRUTA
+       Alta severidad: posible compromiso de credenciales
+       ══════════════════════════════════════════════════════════ -->
+  <rule id="100002" level="14">
+    <if_matched_sid>100001</if_matched_sid>
+    <if_sid>5715</if_sid>
+    <same_source_ip />
+    <description>Login SSH exitoso tras fuerza bruta desde $(srcip) — posible compromiso</description>
+    <mitre>
+      <id>T1110</id>
+      <id>T1078</id>
+    </mitre>
+    <group>exito_autenticacion,fuerza_bruta,critico,</group>
+  </rule>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ACCESO A FICHEROS SENSIBLES
+       Detecta acceso a /etc/shadow o ficheros .key
+       ══════════════════════════════════════════════════════════ -->
+  <rule id="100003" level="12">
+    <if_sid>550,554</if_sid>
+    <match>/etc/shadow</match>
+    <description>Acceso a fichero sensible: /etc/shadow en $(hostname)</description>
+    <mitre>
+      <id>T1003</id>
+    </mitre>
+    <group>acceso_credenciales,ficheros_sensibles,</group>
+  </rule>
+
+  <rule id="100004" level="10">
+    <if_sid>550,554</if_sid>
+    <regex>\.key$|\.pem$|id_rsa</regex>
+    <description>Acceso a fichero de clave privada en $(hostname)</description>
+    <mitre>
+      <id>T1552</id>
+    </mitre>
+    <group>acceso_credenciales,ficheros_sensibles,</group>
+  </rule>
+
+  <!-- ══════════════════════════════════════════════════════════
+       DETECCIÓN DE ESCANEO DE PUERTOS
+       Múltiples intentos de conexión a puertos distintos
+       ══════════════════════════════════════════════════════════ -->
+  <rule id="100005" level="8" frequency="10" timeframe="60">
+    <if_matched_sid>1002</if_matched_sid>
+    <same_source_ip />
+    <description>Posible escaneo de puertos detectado desde $(srcip)</description>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+    <group>reconocimiento,escaneo_puertos,</group>
+  </rule>
+
+  <!-- ══════════════════════════════════════════════════════════
+       INTENTO DE ESCALADA DE PRIVILEGIOS
+       Detecta fallos repetidos de sudo
+       ══════════════════════════════════════════════════════════ -->
+  <rule id="100006" level="10" frequency="3" timeframe="60">
+    <if_matched_sid>5401</if_matched_sid>
+    <same_source_user />
+    <description>Fallos repetidos de sudo — posible intento de escalada de privilegios por $(srcuser)</description>
+    <mitre>
+      <id>T1548</id>
+    </mitre>
+    <group>escalada_privilegios,</group>
+  </rule>
+
+</group>
