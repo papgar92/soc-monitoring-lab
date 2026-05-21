@@ -168,18 +168,6 @@ soc-homelab/
 
 ---
 
-## 🧹 Destruir el laboratorio
-
-Cuando ya no necesites el laboratorio, destruye los contenedores desde la shell de Proxmox:
-
-```bash
-pct stop 101 && pct destroy 101
-pct stop 102 && pct destroy 102
-pct stop 103 && pct destroy 103
-```
-
----
-
 ## 🎯 Habilidades demostradas
 
 - Gestión de contenedores LXC en Proxmox
